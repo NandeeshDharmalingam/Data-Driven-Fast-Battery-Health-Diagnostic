@@ -1,5 +1,5 @@
 import plotly.express as px
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # Define your tasks and their details
 tasks = [
@@ -21,12 +21,16 @@ tasks = [
     {"Task": "Developing scipt for  Relevant Features selection", "Start": "2024-04-17", "Finish": "2024-04-25", "Status": "mandatory"},
     {"Task": "Apply Dimensionality Reduction", "Start": "2024-04-26", "Finish": "2024-05-05", "Status": "mandatory"},
     {"Task": "Finalizing Activation Function", "Start": "2024-04-05", "Finish": "2024-04-15", "Status": "mandatory"},
+    # Your task definitions here...
 ]
 
 # Convert date strings to datetime objects
 for task in tasks:
     task["Start"] = datetime.strptime(task["Start"], "%Y-%m-%d")
     task["Finish"] = datetime.strptime(task["Finish"], "%Y-%m-%d")
+
+# Sort tasks by the "Start" date
+tasks = sorted(tasks, key=lambda x: x["Start"])
 
 # Create Gantt chart
 fig = px.timeline(tasks, x_start="Start", x_end="Finish", y="Task", color="Status",
