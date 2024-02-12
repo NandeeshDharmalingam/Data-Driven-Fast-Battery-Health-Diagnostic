@@ -10,6 +10,10 @@ def collect_data_from_csvs(directory_path):
 
 def charging_part(file_path):
     df = pd.read_csv(file_path)
+    plt.plot(df.iloc[:,1],df.iloc[:,5])
+    plt.show()
+    
+    '''
     df['is_charging'] = df['Command'].str.contains('Charge')  # Identify charging instances
     df['charging_phase'] = (df['is_charging'] & ~df['is_charging'].shift(1).fillna(False)).cumsum()
     
@@ -21,7 +25,6 @@ def charging_part(file_path):
     charging_data['deltaV'] = charging_data.groupby('charging_phase')['U'].diff()
     charging_data['deltaAh'] = charging_data.groupby('charging_phase')['Ah'].diff()
     charging_data['dAh/dV'] = np.where(charging_data['deltaV'] != 0, charging_data['deltaAh'] / charging_data['deltaV'], np.nan)
-    ICvalues=charging_data['dAh/dV'].copy()
     
     plt.figure(figsize=(10, 8))
     for phase in charging_data['charging_phase'].unique():
@@ -31,12 +34,13 @@ def charging_part(file_path):
     plt.xlabel('Voltage (U)')
     plt.ylabel('Incremental capacity [dAh/dV]')
     plt.title('IC curve')
-    #plt.legend()
+    plt.legend()
     plt.show()
 
-    return df, num_charging_cycles , ICvalues
+    return df, num_charging_cycles 
 
-def plot_charging_phase(df, phase_number):
+
+    def plot_charging_phase(df, phase_number):
 
     phase_data = df[df['charging_phase'] == phase_number]
     if not phase_data.empty:
@@ -51,7 +55,7 @@ def plot_charging_phase(df, phase_number):
     else:
         print(f"No data available for charging phase {phase_number}.")
 
-'''
+
 
 def plot_smoothed_ic_curve(charging_data,ICvalues):
     plt.figure(figsize=(10,8))
@@ -75,11 +79,12 @@ def plot_smoothed_ic_curve(charging_data,ICvalues):
 
 
 def main():
-    file_path = 'E:\\Thesis CEVT\\Dataset\\TUM\\Cyc01\\extracted_BW-VTC-429_3577_Cyc01_VV_20deg_BW-VTC-CYC.csv'
-    df, num_charging_cycles, ICvalues = charging_part(file_path)
-    print(f"The dataset contains {num_charging_cycles} charging cycles.")
-    phase_number = 1  
-    plot_charging_phase(df, phase_number)
+    file_path = 'E:\Thesis CEVT\Dataset\TUM\CU_Cyclic\CU000_cyc\CU_cyc000csv\extracted_BW-VTC-210_2228_CU_cyc_000_BW-VTC-CYC.csv'
+    charging_part(file_path)
+    #df, num_charging_cycles, ICvalues = charging_part(file_path)
+    #print(f"The dataset contains {num_charging_cycles} charging cycles.")
+    #phase_number = 1  
+    #plot_charging_phase(df, phase_number)
     #plot_smoothed_ic_curve(df,ICvalues)
 if __name__ == "__main__":
     main()

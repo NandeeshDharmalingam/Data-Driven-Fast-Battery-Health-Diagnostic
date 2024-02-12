@@ -1,66 +1,68 @@
+
 import os
 import scipy.io
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 def extract_and_save_mat_files(folder_path, columns_to_extract):
+    csv_file_paths = []  # Store paths of created CSV files for later processing
     for file in os.listdir(folder_path):
         if file.endswith('.mat'):
-            # Construct the full file path
             file_path = os.path.join(folder_path, file)
-            # Load the .mat file
-            mat_data = scipy.io.loadmat(file_path)
-            # Extract the 'Dataset' key
-            dataset = mat_data['Dataset']
+            mat_data = scipy.io.loadmat(file_path, squeeze_me=True, struct_as_record=False)
+            dataset = mat_data.get('Dataset')
+            if not dataset:
+                print(f"No 'Dataset' found in {file}. Skipping.")
+                continue
 
-            # Create a dictionary to store the extracted data
             data = {}
-
-            # Initialize an array to store the lengths of fields
             array_lengths = {}
 
-            # Iterate through the columns to extract
             for field in columns_to_extract:
-                if isinstance(dataset[field], np.ndarray):
-                    # If the field is an array, extract and store it
-                    data[field] = dataset[field][0][0].squeeze()
-                    # Get the length of the array
-                    array_lengths[field] = len(data[field])
-                else:
-                    # If it's not an array, store it as is
-                    data[field] = dataset[field]
-                    # Set a default length of 1
-                    array_lengths[field] = 1
+                field_value = getattr(dataset, field, None)
+                if field_value is not None:
+                    if isinstance(field_value, np.ndarray):
+                        data[field] = field_value.squeeze()
+                        array_lengths[field] = len(data[field])
+                    else:
+                        data[field] = field_value
+                        array_lengths[field] = 1
 
-            # Check if all arrays have the same length
             if len(set(array_lengths.values())) == 1:
-                # Convert the dictionary to a DataFrame
                 df = pd.DataFrame(data)
-                # Define the CSV file path (change 'extracted_' to any prefix you prefer)
-                csv_file_name = 'extracted_' + os.path.splitext(file)[0] + '.csv'
+                csv_file_name = 'New_' + os.path.splitext(file)[0] + '.csv'
                 csv_file_path = os.path.join(folder_path, csv_file_name)
-                # Save the DataFrame to a CSV file
                 df.to_csv(csv_file_path, index=False)
+                csv_file_paths.append(csv_file_path)
                 print(f"Processed and saved: {csv_file_name}")
             else:
                 print(f"Skipping file '{file}' due to columns having different lengths.")
+    return csv_file_paths
 
-def main():             
-    '''# Define the columns you want to extract from cyclic ageging  
+
+def main():
+    # Define the columns you want to extract from cyclic ageging  
     columns_to_extract = [
         'Time', 'DataSet', 'tStep', 'Line', 'Command', 'U', 'I', 'Ah', 'AhStep', 'AhSet',
         'AhChSet', 'AhDisSet', 'Wh', 'WhStep', 'T1', 'RAC', 'RDC', 'CycCount', 'Count',
         'State', 'i_cut_hi', 'i_cut_lo', 'i_cut_low', 'i_cut_high'
-    ]'''
+    ]
 
-    # Define the columns you want to extract from checkup cyclic aging
-    columns_to_extract = [
-        'Time', 'DataSet', 'tStep', 'Line', 'Command', 'U', 'I', 'Ah', 'AhStep', 'AhSet',
-         'Wh',  'T1', 'RAC', 'RDC', 'CycCount', 
-        'State']
-    folder_path = 'Dataset/TUM/CU_CYC'
-    cyclepath='E:\Thesis CEVT\Dataset\TUM\CU_CYC'
-    extract_and_save_mat_files(folder_path, columns_to_extract)
+#    columns_to_extract = [
+#        'Time', 'DataSet', 'tStep', 'Line', 'Command', 'U', 'I', 'Ah', 'AhStep', 'AhSet',
+#        'Wh', 'T1', 'RAC', 'RDC', 'CycCount', 'State']
+    folder_path = 'E:\Thesis CEVT\Dataset\TUM\CYC_Cyclic'
+    for subdir, dirs, files in os.walk(folder_path, topdown=True):
+        for folder_name in dirs:
+            if folder_name.endswith("Cyc01"):
+                specific_folder_path = os.path.join(subdir, folder_name)
+                csv_file_paths = extract_and_save_mat_files(specific_folder_path, columns_to_extract)
+            else:
+                print("check the path or the name of the file again")
+
+    
+
 
 if __name__ == "__main__":
     main()
